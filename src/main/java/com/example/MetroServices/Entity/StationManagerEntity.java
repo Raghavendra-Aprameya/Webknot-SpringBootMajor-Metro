@@ -9,29 +9,29 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "sos_alerts")
-public class SOSAlertEntity {
+@Table(name = "station_managers")
+public class StationManagerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "station_id", nullable = false)
     private StationEntity station;
 
     @Column(nullable = false)
-    private boolean resolved;
+    private String name;
+
+    @Column(nullable = false)
+    private String contact;
 
     @Override
     public String toString() {
-        return "SOSAlertEntity{" +
+        return "StationManagerEntity{" +
                 "id=" + id +
-                ", userId=" + userId +
                 ", station=" + station +
-                ", resolved=" + resolved +
+                ", name='" + name + '\'' +
+                ", contact='" + contact + '\'' +
                 '}';
     }
 }

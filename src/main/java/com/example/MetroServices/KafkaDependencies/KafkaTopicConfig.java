@@ -14,5 +14,10 @@ public class KafkaTopicConfig {
     {
         return TopicBuilder.name("check-in-topic").build();
     }
+    @Bean
+    public NewTopic CheckInResoponseTopic()
+    {
+        return TopicBuilder.name("check-in-response-topic").build();
+    }
 
 }
