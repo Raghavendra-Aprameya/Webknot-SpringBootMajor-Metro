@@ -3,6 +3,8 @@ package com.example.MetroServices.Controller;
 
 import com.example.MetroServices.DTO.CheckInDTO;
 import com.example.MetroServices.DTO.CheckOutDTO;
+import com.example.MetroServices.DTO.SosDTO;
+import com.example.MetroServices.Entity.CheckInOutEntity;
 import com.example.MetroServices.Entity.StationEntity;
 import com.example.MetroServices.Services.MetroService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +36,16 @@ public class MetroController {
      @GetMapping("/active-stations")
     public ResponseEntity<List<StationEntity>> activeStations()
      {
-         return ResponseEntity.ok(metroService.activeStations())
+         return ResponseEntity.ok(metroService.activeStations());
+     }
+     @GetMapping("/active-users")
+     public List<CheckInOutEntity> getActiveUsers() {
+         return metroService.getActiveUsers();
      }
 
+     @PostMapping("/Sos")
+     public void sendNotification(@RequestBody SosDTO sosPayload) {
+          metroService.getActiveUsers();
+     }
 
 }

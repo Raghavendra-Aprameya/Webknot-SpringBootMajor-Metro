@@ -3,12 +3,14 @@ package com.example.MetroServices.Entity;
 
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @Table(name = "sos_alerts")
 public class SOSAlertEntity {
     @Id

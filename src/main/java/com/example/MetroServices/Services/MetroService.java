@@ -2,12 +2,12 @@ package com.example.MetroServices.Services;
 
 import com.example.MetroServices.DTO.CheckInDTO;
 import com.example.MetroServices.DTO.CheckOutDTO;
+import com.example.MetroServices.DTO.SosDTO;
 import com.example.MetroServices.Entity.CheckInOutEntity;
 import com.example.MetroServices.Entity.FareEntity;
+import com.example.MetroServices.Entity.SOSAlertEntity;
 import com.example.MetroServices.Entity.StationEntity;
-import com.example.MetroServices.Repository.CheckInOutRepository;
-import com.example.MetroServices.Repository.FareRepository;
-import com.example.MetroServices.Repository.StationRepository;
+import com.example.MetroServices.Repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 //@Service
@@ -59,10 +61,20 @@ public class MetroService {
     @Autowired
     private StationRepository stationRepository;
 
+    @Autowired
+    private SosAlertRepository sosAlertRepository;
+
     private final RestTemplate restTemplate;
 
     @Autowired
     private FareRepository fareRepository;
+
+    @Autowired
+    private StationManagerRepository stationManagerRepository;
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate; // Ensure type matches producer config
+
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String USER_SERVICE_URL = "http://localhost:8080/api/v1/users/validate-card/";
 
@@ -164,14 +176,57 @@ public class MetroService {
 //        LocalDateTime checkOutTime = LocalDateTime.now();
 //        long travelDurationMinutes = java.time.Duration.between(checkInTime, checkOutTime).toMinutes();
     }
-    @Cacheable(value = "activeStations", key = "all_active")
+    @Cacheable(value = "activeStations", key = "'all_active'")
     public List<StationEntity> activeStations()
     {
        return stationRepository.findByActiveTrue();
 
-
-
-
     }
 
+    @Cacheable(value = "activeUsers", key = "'all_active_users'")
+    public List<CheckInOutEntity> getActiveUsers() {
+        System.out.println("Fetching active users from database...");
+        return checkInOutRepository.findBySourceStationIsNotNullAndDestinationStationIsNull();
+    }
+
+    public void sendNotification(SosDTO sosPayload) {
+
+        Optional<StationEntity> stationOpt = stationRepository.findById(sosPayload.getStationId());
+        if (stationOpt.isEmpty()) {
+            throw new RuntimeException("Station not found!");
+        }
+
+        String contact = stationManagerRepository.getContactById(sosPayload.getStationId());
+
+        SOSAlertEntity sosAlertEntity = SOSAlertEntity.builder()
+                .userId(sosPayload.getUserId())
+                .station(stationOpt.get())
+                .resolved(false)
+                .build();
+
+        sosAlertRepository.save(sosAlertEntity);
+
+        try {
+            // ✅ Use a HashMap to create JSON properly
+            Map<String, String> messageData = new HashMap<>();
+            messageData.put("contact", contact);
+
+            String message = objectMapper.writeValueAsString(messageData);
+
+            kafkaTemplate.send("sos-topic", message)
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            System.out.println("Message sent successfully to topic: sos-topic");
+                        } else {
+                            System.err.println("Failed to send message to topic: sos-topic");
+                            ex.printStackTrace();
+                        }
+                    });
+        } catch (JsonProcessingException e) {
+            System.err.println("Error converting DTO to string: " + e.getMessage());
+        }
+        //Mail Service needs to be added in Consumer
+    }
 }
+
+
