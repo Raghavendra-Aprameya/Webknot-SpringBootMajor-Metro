@@ -18,7 +18,7 @@ public class MetroController {
 
 
      @PostMapping("/check-in")
-    public void checkIn(@RequestBody String payload)
+    public void checkIn(@RequestBody CheckInDTO payload)
      {
          metroService.checkIn(payload);
      }
