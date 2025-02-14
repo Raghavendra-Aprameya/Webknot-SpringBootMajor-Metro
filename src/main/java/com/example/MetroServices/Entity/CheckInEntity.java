@@ -2,11 +2,12 @@ package com.example.MetroServices.Entity;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "check_ins")
-public class CheckInEntity {
+public class CheckInEntity  implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

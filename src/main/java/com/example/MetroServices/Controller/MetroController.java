@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/metro")
@@ -21,11 +22,12 @@ public class MetroController {
 
 
 
+
+
+
      @PostMapping("/check-in")
-     
      public ResponseEntity<String> checkIn(@RequestBody CheckInDTO checkInDTO) {
-         String response = metroService.checkIn(checkInDTO);
-         return ResponseEntity.ok(response);
+         return ResponseEntity.ok(metroService.checkIn(checkInDTO));
      }
      @PostMapping("/check-out")
      public ResponseEntity<String> checkOut(@RequestBody CheckOutDTO checkOutPayload) {
@@ -45,7 +47,7 @@ public class MetroController {
 
      @PostMapping("/Sos")
      public void sendNotification(@RequestBody SosDTO sosPayload) {
-          metroService.getActiveUsers();
+          metroService.sendNotification(sosPayload);
      }
 
 }
